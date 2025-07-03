@@ -1,9 +1,12 @@
-const User = require('../models/User');
+const {User} = require('../models');
+
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
 const generatePassword = require("../helpers/random")
 const { Op } = require("sequelize");   
 const { addToken } = require("../helpers/blacklist");
+const { LoginActivity } = require('../models');
+
 
 exports.register = async (req, res) => {
   const { username, email, phone } = req.body;
@@ -13,13 +16,11 @@ exports.register = async (req, res) => {
   }
  
   try {
-    // Check if email already exists
     const existingUserByEmail = await User.findOne({ where: { email } });
     if (existingUserByEmail) {
       return res.status(409).json({ error: "Email already registered" });
     }
     
-    // Check if phone number already exists
     const existingUserByPhone = await User.findOne({ where: { phone } });
     if (existingUserByPhone) {
       return res.status(409).json({ error: "Phone number already registered" });
@@ -76,6 +77,17 @@ exports.login = async (req, res) => {
     }
 
 const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+ try {
+  await LoginActivity.create({
+    userId: user.id,
+    device: req.headers['user-agent'],
+    ipAddress: req.ip || req.connection.remoteAddress,
+    location: 'Unknown'
+  });
+} catch (err) {
+  console.log("Login activity failed:", err.message);
+}
+
     const { password: _, ...userWithoutPassword } = user.toJSON();
 
     res.json({ message: "Login successful", token, user: userWithoutPassword });
@@ -96,38 +108,4 @@ exports.logout = async (req, res) => {
 };
 
 
-// exports.login = async (req, res) => {
-//   const { phone, email, password } = req.body;
 
-//   try {
-//     let user;
-
-//     // ✅ Check if phone is provided
-//     if (phone) {
-//       user = await User.findOne({ where: { phone } });
-//     } else if (email) {
-//       user = await User.findOne({ where: { email } });
-//     } else {
-//       return res.status(400).json({ message: "Phone or Email is required" });
-//     }
-
-//     // ❌ If user not found
-//     if (!user) return res.status(404).json({ message: "User not found" });
-
-//     // ✅ Compare password
-//     const isMatch = await bcrypt.compare(password, user.password);
-//     if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
-
-//     // ✅ Create JWT Token
-//     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-
-//     // ✅ Return user data (without password)
-//     const { password: _, ...userWithoutPassword } = user.toJSON();
-
-//     res.json({ message: "Login successful", token, user: userWithoutPassword });
-
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: "Server error", error: err.message });
-//   }
-// };

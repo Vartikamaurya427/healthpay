@@ -7,7 +7,8 @@ const { updateProfile } = require('../controllers/profileController');
 const { changePassword } = require("../controllers/passwordController");
 const { logout } = require("../controllers/userController");
 const upload = require('../helpers/multer');
-
+const { saveFcmToken } = require("../controllers/fcmController");
+const { getFcmTokenByUserId } = require("../controllers/fcmController");
 
 
 
@@ -20,7 +21,9 @@ router.get('/profile', authMiddleware, profileController.getProfile);
 router.put('/profile', authMiddleware, upload.single('profileImage'), updateProfile);
 router.post("/change-password", authMiddleware, changePassword);
 router.post("/logout", authMiddleware, logout);
-
+router.post("/fcm-token", saveFcmToken);
+router.get("/get-token/:userId", getFcmTokenByUserId);
 
 
 module.exports = router;
+
