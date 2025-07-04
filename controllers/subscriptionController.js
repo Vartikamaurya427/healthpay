@@ -50,4 +50,3 @@ exports.deleteSubscription = async (req, res) => {
     res.status(500).json({ message: "Error deleting subscription", error: error.message });
   }
 };
-
