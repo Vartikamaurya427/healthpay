@@ -1,40 +1,28 @@
-'use strict';
+const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
-const Sequelize = require('sequelize');
+
 const basename = path.basename(__filename);
-const config = require(__dirname + '/../config/config.json')["development"];
 const db = {};
 
-let sequelize = new Sequelize(config.database, config.username, config.password, config);
-
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      file !== basename &&
-      file.slice(-3) === '.js'
-    );
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
-
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
+// ✅ Connect to MongoDB (adjust URI as needed)
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdbname', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+// ✅ Dynamically load all models in this folder
+fs.readdirSync(__dirname)
+  .filter(file => (
+    file.indexOf('.') !== 0 &&
+    file !== basename &&
+    file.slice(-3) === '.js'
+  ))
+  .forEach(file => {
+    const model = require(path.join(__dirname, file));
+    const modelName = model.modelName || path.basename(file, '.js');
+    db[modelName] = model;
+  });
 
-const UserPrivacySetting = require('./UserPrivacySetting')(sequelize, Sequelize.DataTypes);
-db.UserPrivacySetting = UserPrivacySetting;
-const BlockedUser = require('./BlockedUser')(sequelize, Sequelize.DataTypes);
-db.BlockedUser = BlockedUser;
-
-
+db.mongoose = mongoose;
 module.exports = db;

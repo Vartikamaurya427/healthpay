@@ -1,37 +1,34 @@
+// models/Contact.js
 
-// models/contact.js
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-module.exports = (sequelize, DataTypes) => {
-  const Contact = sequelize.define('Contact', {
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    email: {
-      type: DataTypes.STRING
-    },
-    username: {
-      type: DataTypes.STRING
-    },
-    profileImage: {
-      type: DataTypes.STRING
-    },
-    isFavorite: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
-    }
-  }, {
-    tableName: 'Contacts'
-  });
+const contactSchema = new Schema({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User', // Association with User
+    required: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String
+  },
+  username: {
+    type: String
+  },
+  profileImage: {
+    type: String
+  },
+  isFavorite: {
+    type: Boolean,
+    default: false
+  }
+}, {
+  timestamps: true, // adds createdAt and updatedAt
+  collection: 'Contacts' // same as tableName in Sequelize
+});
 
-  // Association with User (optional if needed)
-  Contact.associate = (models) => {
-    Contact.belongsTo(models.User, { foreignKey: 'userId' });
-  };
-
-  return Contact;
-};
+module.exports = mongoose.model('Contact', contactSchema);

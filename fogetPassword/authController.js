@@ -1,74 +1,64 @@
-const { User, Otp } = require('../models');
-const { Op } = require('sequelize');
+const User = require('../models/User'); // Mongoose User model
 const bcrypt = require('bcryptjs');
-const sendOtp = require('../helpers/sendOtp');
+const { generate6DigitOtp } = require("../helpers/otp");
+const { sendOtpToPhone } = require("../helpers/otp");
+const jwt = require("jsonwebtoken");
 
-exports.forgotPassword = async (req, res) => {
-  const { identifier } = req.body;
+// ⏳ 1. Send OTP to phone (for forgot PIN)
+exports.forgotPinSendOtp = async (req, res) => {
+  const { phone } = req.body;
+  if (!phone) return res.status(400).json({ message: "Phone number required" });
 
-  const user = await User.findOne({
-    where: { [Op.or]: [{ email: identifier }, { phone: identifier }] }
-  });
+  const user = await User.findOne({ phone });
+  if (!user) return res.status(404).json({ message: "User not found" });
 
-  if (!user) return res.status(404).json({ message: 'User not found' });
+  const otp = generate6DigitOtp();
+  const otpHash = await bcrypt.hash(otp, 10);
+  const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 mins from now
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  console.log('DEV OTP:', otp); // sirf dev me
+  user.otpHash = otpHash;
+  user.otpExpires = otpExpires;
+  await user.save();
 
-  const hashedOtp = await bcrypt.hash(otp, 10);
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min expiry
-
-  await Otp.create({ identifier, otp: hashedOtp, expiresAt });
-
-  await sendOtp(identifier, otp); // email ya SMS se bhejna
-  res.json({ message: 'OTP sent successfully' });
+  await sendOtpToPhone(phone, otp); // helper
+  res.json({ message: "OTP sent to your phone" });
 };
-exports.verifyOtp = async (req, res) => {
-  const { identifier, otp } = req.body;
 
-  const record = await Otp.findOne({
-    where: {
-      identifier,
-      verified: false,
-      expiresAt: { [Op.gt]: new Date() }
-    },
-    order: [['createdAt', 'DESC']]
-  });
+// ✅ 2. Verify OTP
+exports.forgotPinVerifyOtp = async (req, res) => {
+  const { phone, otp } = req.body;
+  const user = await User.findOne({ phone });
+  if (!user) return res.status(404).json({ message: "User not found" });
 
-  if (!record) return res.status(400).json({ message: 'Invalid or expired OTP' });
+  const isValid = await bcrypt.compare(otp, user.otpHash);
+  const notExpired = new Date(user.otpExpires) > new Date();
 
-  const isMatch = await bcrypt.compare(otp, record.otp);
-  if (!isMatch) return res.status(400).json({ message: 'Invalid OTP' });
+  if (!isValid || !notExpired) {
+    return res.status(400).json({ message: "Invalid or expired OTP" });
+  }
 
-  record.verified = true;
-  await record.save();
+  const token = jwt.sign(
+    { id: user._id, pinReset: true },
+    process.env.JWT_SECRET,
+    { expiresIn: "10m" }
+  );
 
-  res.json({ message: 'OTP verified successfully' });
+  res.json({ message: "OTP verified", token });
 };
-exports.resetPassword = async (req, res) => {
-  const { identifier, newPassword, confirmPassword } = req.body;
 
-  if (!newPassword || !confirmPassword)
-    return res.status(400).json({ message: 'Both password fields are required' });
+// 🔒 3. Set new PIN after OTP
+exports.setNewPinAfterOtp = async (req, res) => {
+  const userId = req.user.id;
+  const { pin } = req.body;
 
-  if (newPassword !== confirmPassword)
-    return res.status(400).json({ message: 'Passwords do not match' });
+  if (!pin) return res.status(400).json({ message: "New PIN required" });
 
-  const lastOtp = await Otp.findOne({
-    where: { identifier, verified: true },
-    order: [['updatedAt', 'DESC']]
-  });
+  const user = await User.findById(userId);
+  if (!user) return res.status(404).json({ message: "User not found" });
 
-  if (!lastOtp) return res.status(400).json({ message: 'OTP not verified' });
+  user.pinHash = await bcrypt.hash(pin, 10);
+  await user.save();
 
-  const hashed = await bcrypt.hash(newPassword, 10);
-
-  await User.update({ password: hashed }, {
-    where: { [Op.or]: [{ email: identifier }, { phone: identifier }] }
-  });
-
-  lastOtp.verified = false; // invalidate used OTP
-  await lastOtp.save();
-
-  res.json({ message: 'Password reset successful' });
+  const fullToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+  res.json({ message: "PIN set successfully", token: fullToken });
 };

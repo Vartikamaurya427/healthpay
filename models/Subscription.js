@@ -1,44 +1,42 @@
-module.exports = (sequelize, DataTypes) => {
-  const Subscription = sequelize.define('Subscription', {
-    userId: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
-    },
-    serviceName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    amount: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-    },
-    currency: {
-      type: DataTypes.STRING,
-      defaultValue: 'INR',
-    },
-    startDate: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    endDate: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    isActive: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-    },
-    paymentMethod: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-  }, {
-    tableName: 'subscriptions'
-  });
+const mongoose = require('mongoose');
 
-  Subscription.associate = models => {
-    Subscription.belongsTo(models.User, { foreignKey: 'userId' });
-  };
+const subscriptionSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  serviceName: {
+    type: String,
+    required: true
+  },
+  amount: {
+    type: Number,
+    required: true
+  },
+  currency: {
+    type: String,
+    default: 'INR'
+  },
+  startDate: {
+    type: Date,
+    required: true
+  },
+  endDate: {
+    type: Date,
+    required: true
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  paymentMethod: {
+    type: String,
+    default: null
+  }
+}, {
+  timestamps: true,
+  collection: 'subscriptions'
+});
 
-  return Subscription;
-};
+module.exports = mongoose.model('Subscription', subscriptionSchema);

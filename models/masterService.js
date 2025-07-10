@@ -1,28 +1,22 @@
-module.exports = (sequelize, DataTypes) => {
-  const MasterService = sequelize.define('MasterService', {
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    iconUrl: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
-    category: {
-      type: DataTypes.STRING,
-      allowNull: true // e.g., "OTT", "Utility", etc.
-    },
-    isActive: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true
-    }
-  }, {
-    tableName: 'MasterServices'
-  });
+const mongoose = require("mongoose");
 
-  return MasterService;
-};
+const masterServiceSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  icon: {
+    type: String,
+    default: null
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
+}, {
+  timestamps: true,
+  collection: 'MasterServices'
+});
+
+module.exports.MasterService = mongoose.model('MasterService', masterServiceSchema);

@@ -1,5 +1,5 @@
-// const admin = require("firebase-admin");
-const admin = require("../config/firebase");  
+const admin = require("../config/firebase");  // Firebase Admin SDK initialized here
+
 const sendNotification = async (token, title, body) => {
   try {
     const message = {
@@ -7,14 +7,16 @@ const sendNotification = async (token, title, body) => {
         title,
         body,
       },
-      token: token,  
+      token,
     };
-    const response = await admin.messaging().send(message); 
-    console.log("Notification sent:", response);
+
+    const response = await admin.messaging().send(message);
+    console.log("📨 Notification sent:", response);
     return true;
   } catch (error) {
-    console.error("Error sending notification:", error);
+    console.error("❌ Error sending notification:", error.message);
     return false;
   }
 };
+
 module.exports = sendNotification;

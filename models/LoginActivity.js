@@ -1,30 +1,30 @@
-module.exports = (sequelize, DataTypes) => {
-  const LoginActivity = sequelize.define('LoginActivity', {
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    device: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    ipAddress: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    location: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    loggedInAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-  });
+const mongoose = require("mongoose");
 
-  LoginActivity.associate = (models) => {
-    LoginActivity.belongsTo(models.User, { foreignKey: 'userId' });
-  };
+const loginActivitySchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+  device: {
+    type: String,
+    default: 'Unknown'
+  },
+  ipAddress: {
+    type: String,
+    default: 'Unknown'
+  },
+  location: {
+    type: String,
+    default: 'Unknown'
+  },
+  loggedInAt: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: true,
+  collection: "LoginActivities"
+});
 
-  return LoginActivity;
-};
+module.exports.LoginActivity = mongoose.model("LoginActivity", loginActivitySchema);

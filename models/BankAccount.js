@@ -1,29 +1,31 @@
-module.exports = (sequelize, DataTypes) => {
-  const BankAccount = sequelize.define('BankAccount', {
+// models/BankAccount.js
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-    userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    },
-    bankName: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    accountNumber: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    ifscCode: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    isPrimary: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
-    }
-  });
-  BankAccount.associate = (models) => {
-    BankAccount.belongsTo(models.User, { foreignKey: 'userId' });
-  };
-  return BankAccount;
-};
+const bankAccountSchema = new Schema({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User', // referencing User collection
+    required: true
+  },
+  bankName: {
+    type: String,
+    required: true
+  },
+  accountNumber: {
+    type: String,
+    required: true
+  },
+  ifscCode: {
+    type: String,
+    required: true
+  },
+  isPrimary: {
+    type: Boolean,
+    default: false
+  }
+}, {
+  timestamps: true
+});
+
+module.exports = mongoose.model('BankAccount', bankAccountSchema);

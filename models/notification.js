@@ -1,22 +1,23 @@
-module.exports = (sequelize, DataTypes) => {
-  const Notification = sequelize.define("Notification", {
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    body: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    isRead: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-  });
+const mongoose = require('mongoose');
 
-  return Notification;
-};
+const notificationSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId, // Reference to the User collection
+    required: true,
+    ref: 'User'
+  },
+  title: {
+    type: String,
+    required: true
+  },
+  body: {
+    type: String,
+    required: true
+  },
+  isRead: {
+    type: Boolean,
+    default: false
+  }
+}, { timestamps: true }); // Adds createdAt and updatedAt fields
+
+module.exports = mongoose.model('Notification', notificationSchema);

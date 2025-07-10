@@ -1,31 +1,29 @@
 // src/controllers/contactController.js
-const { Contact } = require('../models');
-const { Op } = require('sequelize');
+const Contact = require('../models/Contact'); // Mongoose model
+const mongoose = require('mongoose');
 
 exports.getContacts = async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log('JWT userId =', req.user.id);
-
     const { q, favorite, limit = 30, offset = 0 } = req.query;
 
-    const where = { userId };
+    const filter = { userId };
+
     if (q) {
-      where[Op.or] = [
-        { name:     { [Op.like]: `%${q}%` } },
-        { email:    { [Op.like]: `%${q}%` } },
-        { username: { [Op.like]: `%${q}%` } },
+      filter.$or = [
+        { name:     { $regex: q, $options: 'i' } },
+        { email:    { $regex: q, $options: 'i' } },
+        { username: { $regex: q, $options: 'i' } },
       ];
     }
-    if (favorite === 'true')  where.isFavorite = true;
-    if (favorite === 'false') where.isFavorite = false;
 
-    const contacts = await Contact.findAll({
-      where,
-      order: [['isFavorite', 'DESC'], ['name', 'ASC']],
-      limit:  +limit,
-      offset: +offset,
-    });
+    if (favorite === 'true')  filter.isFavorite = true;
+    if (favorite === 'false') filter.isFavorite = false;
+
+    const contacts = await Contact.find(filter)
+      .sort({ isFavorite: -1, name: 1 })
+      .skip(parseInt(offset))
+      .limit(parseInt(limit));
 
     res.json({ contacts });
   } catch (err) {
@@ -33,21 +31,21 @@ exports.getContacts = async (req, res) => {
   }
 };
 
-// ⭐ favourite on/off
+// ⭐ Toggle favorite
 exports.toggleFavorite = async (req, res) => {
   try {
-    const { id } = req.params;            // contact id
-    const { isFavorite } = req.body;      // true / false
+    const { id } = req.params;
+    const { isFavorite } = req.body;
     const userId = req.user.id;
 
-    const [rows] = await Contact.update(
+    const updated = await Contact.findOneAndUpdate(
+      { _id: id, userId },
       { isFavorite },
-      { where: { id, userId } }
+      { new: true }
     );
 
-    if (!rows) return res.status(404).json({ message: 'Contact not found' });
+    if (!updated) return res.status(404).json({ message: 'Contact not found' });
 
-    const updated = await Contact.findByPk(id);
     res.json({ message: 'Favorite updated', contact: updated });
   } catch (err) {
     res.status(500).json({ message: 'Error updating favorite', error: err.message });

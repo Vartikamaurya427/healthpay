@@ -1,14 +1,8 @@
-module.exports = (sequelize, DataTypes) => {
-  const BlockedUser = sequelize.define('BlockedUser', {
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    blockedUserId: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    }
-  });
+const mongoose = require("mongoose");
 
-  return BlockedUser;
-};
+const blockedUserSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  blockedUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+}, { timestamps: true });
+
+module.exports.BlockedUser = mongoose.model("BlockedUser", blockedUserSchema);

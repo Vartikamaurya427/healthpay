@@ -1,19 +1,22 @@
-module.exports = (sequelize, DataTypes) => {
-  const UserPrivacySetting = sequelize.define("UserPrivacySetting", {
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    permissionGiven: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
-    },
-    searchPrivacy: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true
-    },
-    
-  });
+const mongoose = require('mongoose');
 
-  return UserPrivacySetting;
-};
+const userPrivacySettingSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  permissionGiven: {
+    type: Boolean,
+    default: false
+  },
+  searchPrivacy: {
+    type: Boolean,
+    default: true
+  }
+}, {
+  timestamps: true,
+  collection: 'user_privacy_settings'
+});
+
+module.exports = mongoose.model('UserPrivacySetting', userPrivacySettingSchema);

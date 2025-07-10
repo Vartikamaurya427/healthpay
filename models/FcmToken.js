@@ -1,14 +1,18 @@
-module.exports = (sequelize, DataTypes) => {
-  const FcmToken = sequelize.define('FcmToken', {
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    token: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-  });
+const mongoose = require("mongoose");
 
-  return FcmToken;
-};
+const fcmTokenSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  token: {
+    type: String,
+    required: true
+  }
+}, {
+  timestamps: true,
+  collection: 'FcmTokens'
+});
+
+module.exports.FcmToken = mongoose.model('FcmToken', fcmTokenSchema);

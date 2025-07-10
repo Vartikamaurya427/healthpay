@@ -1,24 +1,18 @@
-const { Sequelize } = require('sequelize');
-require('dotenv').config();
+// config/db.js
+const mongoose = require('mongoose');
+require('dotenv').config(); // Load .env variables
 
-const sequelize = process.env.DB_URL
-  ? new Sequelize(process.env.DB_URL, {
-      dialect: 'mysql',
-      logging: false,
-    })
-  : new Sequelize(
-      process.env.DB_NAME,
-      process.env.DB_USER,
-      process.env.DB_PASSWORD,
-      {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT,
-        dialect: process.env.DB_DIALECT,
-        logging: false,
-      }
-    );
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("✅ MongoDB connected");
+  } catch (err) {
+    console.error("❌ MongoDB connection error →", err.message);
+    process.exit(1);
+  }
+};
 
-// Optional debug log
-console.log('🌐 Using DB_URL:', process.env.DB_URL || 'Fallback configuration used');
-
-module.exports = sequelize;
+module.exports = connectDB;

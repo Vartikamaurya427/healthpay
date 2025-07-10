@@ -1,4 +1,4 @@
-const { User } = require('../models');
+const { User } = require('../models/User');
 
 exports.getReviewSummary = async (req, res) => {
   try {
@@ -9,10 +9,10 @@ exports.getReviewSummary = async (req, res) => {
       return res.status(400).json({ message: 'recipientId, amount, paymentType required' });
     }
 
-    // 2️⃣ Fetch recipient
-    const recipient = await User.findByPk(recipientId, {
-      attributes: ['id', 'username', 'email', 'profileImage']
-    });
+    // 2️⃣ Fetch recipient by _id
+    const recipient = await User.findById(recipientId)
+      .select('id username email profileImage');
+
     if (!recipient) {
       return res.status(404).json({ message: 'Recipient not found' });
     }
