@@ -16,8 +16,8 @@ connectDB(); // ← this must be called before server starts
 require('./cron/deleteOldUsers'); // same as before
 
 const userRoutes = require('./routes/userRoutes');
-const notificationRoutes = require("./routes/notificationRoutes");
-const rewardRoutes = require('./routes/rewardRoutes');
+// const notificationRoutes = require("./routes/notificationRoutes");
+// const rewardRoutes = require('./routes/rewardRoutes');
 const privacyRoutes = require('./routes/privacyRoutes');
 const languageRoutes = require('./routes/languageRoutes');
 const loginActivityRoutes = require('./routes/loginActivityRoutes');
@@ -40,8 +40,8 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
 app.use('/api/users', userRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use('/api/rewards', rewardRoutes);
+// app.use("/api/notifications", notificationRoutes);
+// app.use('/api/rewards', rewardRoutes);
 app.use('/api/privacy', privacyRoutes);
 app.use('/api/language', languageRoutes);
 app.use('/api', loginActivityRoutes);
